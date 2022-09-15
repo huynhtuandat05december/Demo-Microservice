@@ -1,0 +1,11 @@
+version: "3"
+services:
+  borken:
+    build:
+      context: ./../broker-service
+      dockerfile: ./../broker-service/broker-service.dockerfile
+    ports:
+      - "8080:80"
+    deploy:
+      mode: relicated
+      replicas: 1
