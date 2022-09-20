@@ -1,12 +1,13 @@
-package main
+package controllers
 
 import (
+	"broken/helpers"
 	"encoding/json"
 	"net/http"
 )
 
-func (app *Config) Broker(w http.ResponseWriter, r *http.Request) {
-	payload := jsonResponse{
+func Broker(w http.ResponseWriter, r *http.Request) {
+	payload := helpers.JsonResponse{
 		Error:   false,
 		Message: "Hit the broker",
 	}

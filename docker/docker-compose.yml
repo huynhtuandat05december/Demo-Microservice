@@ -5,7 +5,58 @@ services:
       context: ./../broker-service
       dockerfile: ./../broker-service/broker-service.dockerfile
     ports:
-      - "8080:80"
+      - "8000:8000"
     deploy:
       mode: relicated
       replicas: 1
+  logger:
+    build:
+      context: ./../logger-service
+      dockerfile: ./../logger-service/logger-service.dockerfile
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+  authentication:
+    depends_on:
+      - postgres
+    build:
+      context: ./../authentication-service
+      dockerfile: ./../authentication-service/authentication-service.dockerfile
+    ports:
+      - "8001:8001"
+    deploy:
+      mode: relicated
+      replicas: 1
+    environment:
+      HOST: postgres
+      PORT: 5432
+      USER_NAME: postgres
+      PASSWORD: secret
+      DB_NAME: db_test
+    command:
+      ["./wait-for-it.sh", "postgres:5000", "--", "/app/authenticationApp"]
+  postgres:
+    image: "postgres:14.0"
+    ports:
+      - "5000:5432"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: db_test
+    volumes:
+      - ./db-data/postgres/:/var/lib/postgresql/data/
+  mongo:
+    image: "mongo:4.2.16-bionic"
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: logs
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - ./db-data/mongo/:/data/db

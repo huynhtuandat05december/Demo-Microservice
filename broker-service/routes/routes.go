@@ -1,6 +1,7 @@
-package main
+package routes
 
 import (
+	"broken/controllers"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -8,7 +9,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func (app *Config) routes() http.Handler {
+func Routes() http.Handler {
 	mux := chi.NewRouter()
 
 	// specify who is allowed to connect
@@ -23,7 +24,9 @@ func (app *Config) routes() http.Handler {
 
 	mux.Use(middleware.Heartbeat("/ping"))
 
-	mux.Post("/", app.Broker)
+	mux.Post("/", controllers.Broker)
+
+	mux.Post("/handle", controllers.HandleSubmission)
 
 	return mux
 }
