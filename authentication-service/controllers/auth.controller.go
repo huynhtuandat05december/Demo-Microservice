@@ -4,6 +4,8 @@ import (
 	"authentication/dto"
 	"authentication/helpers"
 	"authentication/services"
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -47,6 +49,13 @@ func (controller *authController) Authenticate(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// log authentication
+	err = logRequest("authentication", fmt.Sprintf("%s logged in", user.Email))
+	if err != nil {
+		helpers.ErrorJSON(w, err)
+		return
+	}
+
 	payload := helpers.JsonResponse{
 		Error:   false,
 		Message: fmt.Sprintf("Logged in user %s", user.Email),
@@ -54,4 +63,28 @@ func (controller *authController) Authenticate(w http.ResponseWriter, r *http.Re
 	}
 
 	helpers.WriteJSON(w, http.StatusAccepted, payload)
+}
+
+func logRequest(name string, data string) error {
+	entry := dto.LogDTO{
+		Name: name,
+		Data: data,
+	}
+
+	jsonData, _ := json.MarshalIndent(entry, "", " ")
+	logServiceURL := "http://logger:8002/log"
+	method := "POST"
+	request, err := http.NewRequest(method, logServiceURL, bytes.NewBuffer(jsonData))
+
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{}
+	_, err = client.Do(request)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

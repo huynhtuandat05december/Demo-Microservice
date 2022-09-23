@@ -33,6 +33,8 @@ services:
       context: ./../logger-service
       dockerfile: ./../logger-service/logger-service.dockerfile
     restart: always
+    ports:
+      - "8002:8002"
     deploy:
       mode: replicated
       replicas: 1

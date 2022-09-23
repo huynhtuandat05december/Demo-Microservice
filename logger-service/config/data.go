@@ -16,7 +16,7 @@ func ConnectDB() (*mongo.Client, error) {
 	// create connection options
 	clientOptions := options.Client().ApplyURI(mongoURL)
 	clientOptions.SetAuth(options.Credential{
-		Username: "user",
+		Username: "admin",
 		Password: "password",
 	})
 

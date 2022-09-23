@@ -43,17 +43,7 @@
         let received=document.getElementById("received")
 
         mailBtn.addEventListener("click", function() {
-
             const payload = {
-        
-                    from: "me@example.com",
-                    to: "you@there.com",
-                    subject: "Test email",
-                    message: "Hello world!",
-                
-            }
-
-            {{/* const payload = {
                 action: "mail",
                 mail: {
                     from: "me@example.com",
@@ -61,7 +51,7 @@
                     subject: "Test email",
                     message: "Hello world!",
                 }
-            } */}}
+            }
 
             const headers = new Headers();
             headers.append("Content-Type", "application/json");
@@ -72,7 +62,7 @@
                 headers: headers,
             }
 
-            fetch("http:\/\/localhost:8003/send", body)
+            fetch("http:\/\/localhost:8000/handle", body)
             .then((response) => response.json())
             .then((data) => {
                 sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -107,7 +97,7 @@
                 headers: headers,
             }
 
-            fetch("http:\/\/localhost:8000/handle", body)
+            fetch("http://localhost:8000/handle", body)
             .then((response) => response.json())
             .then((data) => {
                 sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -142,7 +132,7 @@
                 headers: headers,
             }
 
-            fetch("http:\/\/localhost:8000/handle", body)
+            fetch("http://localhost:8000/handle", body)
             .then((response) => response.json())
             .then((data) => {
                 sent.innerHTML = JSON.stringify(payload, undefined, 4);
