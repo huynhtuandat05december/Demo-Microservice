@@ -25,6 +25,8 @@ func HandleSubmission(w http.ResponseWriter, r *http.Request) {
 		log(w, requestDTO.Log)
 	case "auth":
 		authenticate(w, requestDTO.Auth)
+	case "mail":
+		sendMail(w, requestDTO.Mail)
 	default:
 		helpers.ErrorJSON(w, errors.New("unknown action"))
 	}
@@ -121,4 +123,38 @@ func log(w http.ResponseWriter, payload dto.LogDTO) {
 
 	helpers.WriteJSON(w, http.StatusAccepted, response)
 
+}
+
+func sendMail(w http.ResponseWriter, payload dto.SendMailDTO) {
+	jsonData, err := json.MarshalIndent(payload, "", " ")
+	if err != nil {
+		helpers.ErrorJSON(w, err)
+		return
+	}
+	url := "http://mailer:8003/send"
+	method := "POST"
+	request, err := http.NewRequest(method, url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		helpers.ErrorJSON(w, err)
+		return
+	}
+	client := &http.Client{}
+	responseFromService, err := client.Do(request)
+	if err != nil {
+		helpers.ErrorJSON(w, err)
+		return
+	}
+	defer responseFromService.Body.Close()
+	if responseFromService.StatusCode != http.StatusAccepted {
+		helpers.ErrorJSON(w, errors.New("error calling mailer service"))
+		return
+	}
+
+	// create a variable we'll read response.Body into
+
+	var response helpers.JsonResponse
+	response.Error = false
+	response.Message = "Message sent to " + payload.To
+
+	helpers.WriteJSON(w, http.StatusAccepted, response)
 }
