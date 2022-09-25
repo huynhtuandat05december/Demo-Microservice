@@ -33,8 +33,8 @@ services:
       context: ./../logger-service
       dockerfile: ./../logger-service/logger-service.dockerfile
     restart: always
-    ports:
-      - "8002:8002"
+    # ports:
+    #   - "8002:8002"
     deploy:
       mode: replicated
       replicas: 1
@@ -43,8 +43,8 @@ services:
       context: ./../mail-service
       dockerfile: ./../mail-service/mail-service.dockerfile
     restart: always
-    ports:
-      - 8003:8003
+    # ports:
+    #   - 8003:8003
     deploy:
       mode: replicated
       replicas: 1

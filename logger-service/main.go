@@ -39,9 +39,13 @@ func main() {
 		logService services.LogService = services.NewLogService(logRepository)
 		//controller
 		logController controllers.LogController = controllers.NewLogController(logService)
+		//gRPC
+		logServer controllers.LogServer = controllers.NewLogServer(logService)
 	)
 
 	log.Printf("Starting logger service on port %s\n", webPort)
+
+	go config.GRPCListen(logServer)
 
 	server := &http.Server{
 		Addr: fmt.Sprintf(":%s", webPort),

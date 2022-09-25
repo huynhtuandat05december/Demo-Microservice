@@ -4,13 +4,18 @@ import (
 	"broken/dto"
 	"broken/event"
 	"broken/helpers"
+	"broken/logs"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type requestController struct {
@@ -21,6 +26,7 @@ type RequestController interface {
 	HandleSubmission(w http.ResponseWriter, r *http.Request)
 	PushToQueue(name, msg string) error
 	logEventViaRabbit(w http.ResponseWriter, logDTO dto.LogDTO)
+	LogViaGRPC(w http.ResponseWriter, r *http.Request)
 }
 
 func NewRequestController(Rabbit *amqp.Connection) RequestController {
@@ -42,7 +48,7 @@ func (controller *requestController) HandleSubmission(w http.ResponseWriter, r *
 
 	switch requestDTO.Action {
 	case "log":
-		log(w, requestDTO.Log)
+		controller.logEventViaRabbit(w, requestDTO.Log)
 	case "auth":
 		authenticate(w, requestDTO.Auth)
 	case "mail":
@@ -212,4 +218,40 @@ func (controller *requestController) PushToQueue(name, msg string) error {
 		return err
 	}
 	return nil
+}
+
+func (controller *requestController) LogViaGRPC(w http.ResponseWriter, r *http.Request) {
+	var requestDTO dto.RequestDTO
+	err := helpers.ReadJSON(w, r, &requestDTO)
+	if err != nil {
+		helpers.ErrorJSON(w, err)
+		return
+	}
+
+	conn, err := grpc.Dial("logger:50001", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	if err != nil {
+		helpers.ErrorJSON(w, err)
+		return
+	}
+	defer conn.Close()
+	client := logs.NewLogServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	_, err = client.WriteLog(ctx, &logs.LogRequest{
+		LogEntry: &logs.Log{
+			Name: requestDTO.Log.Name,
+			Data: requestDTO.Log.Name,
+		},
+	})
+	if err != nil {
+		helpers.ErrorJSON(w, err)
+		return
+	}
+
+	var payload helpers.JsonResponse
+	payload.Error = false
+	payload.Message = "logged"
+
+	helpers.WriteJSON(w, http.StatusAccepted, payload)
+
 }
